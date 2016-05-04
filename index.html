@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Flux Map Sketcher</title>
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/lodash/4.11.2/lodash.min.js"></script>
+
+	<link rel="stylesheet" type="text/css" href="semantic/dist/semantic.min.css">
+	<script src="semantic/dist/semantic.min.js"></script>
+
+	<script src="./flux-sdk.js"></script>
+	<script src="./sdk-login-script.js"></script>
+	<script src="./main.js"></script>
+
+	<style>
+		#map {height: 80vh;}
+
+	</style>
+</head>
+<body>
+	<div class="ui container">
+		<h1>FLUX</h1>
+
+		<div class="ui one column grid">
+			<div class = "column" id="map"></div>
+			<!-- note: replace this google maps api key with your own developer key -->
+			<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwwDkgSdbhyKBxSN9XCAWkF0b7Z-xCZ_8&libraries=drawing&callback=initMap" async defer></script>
+		</div>
+	
+		<div class="ui two column grid">
+		<div class="blue column" id="projects">
+			<h2>Projects <button class="ui button" id="launch">load</button></h2>
+			<select size=1 class="ui search selection dropdown" id="projectlist"></select>
+		</div>
+
+		<div class="green column" id="datatable">
+			<h2>Keys 
+			<button class="ui button" id="create-cell">create new</button>
+			<button class="ui button" id="write-cell">write to key</button>
+			<button class="ui button" id="clear-map">clear map</button>
+			</h2>
+			<select size=1 class="ui search selection dropdown" id="cell-list"></select>
+		</div>
+	</div>
+
+
+	<div id="create-cell-modal" class="ui modal">
+	  <i class="close icon"></i>
+	  <div class="header">
+	    Create new cell
+	  </div>
+	  <div class="ui form content">
+	    <div class="field">
+	      <label class="create-cell-modal" id="cell-name-field-label">Enter a name for your new cell</label>
+	      <input type="text" id="cell-name-field" name="cell-name" placeholder="Cell name">
+	    </div>
+	  </div>
+	  <div class="actions">
+	    <div class="ui deny button create-cell-modal">Cancel</div>
+	    <div class="ui positive button create-cell-modal">OK</div>
+	  </div>
+	</div>
+
+</body>
+</html>
