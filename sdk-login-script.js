@@ -1,7 +1,7 @@
 var clientId = '920ff2e1-1451-47e2-9308-2e23791b195b';
 
 var redirUri = 'https://flux-map-sketcher.herokuapp.com/';
-// var redirUri = 'http://localhost:8080';
+// var redirUri = 'http://localhost:5000';
 
 var sdk = new FluxSdk(clientId, {
   redirectUri: redirUri // your port
