@@ -74,7 +74,8 @@ $(document).ready(function() {
     let cellid = $('#cell-list option:selected').first().attr('data-id');
 
     let cell = user.getProject(projectid).getDataTable().getCell(cellid);
-    let val = map_overlays.map(overlayToPrimitive);
+    let cornerSW = findSWCorner(map_overlays);
+    let val = map_overlays.map(function(overlay) {return overlayToPrimitive(overlay , cornerSW);});
     cell.update({ value: val}).then(function(result) {console.log(result);});
   });
 
@@ -102,23 +103,12 @@ function initMap() {
       position: google.maps.ControlPosition.TOP_CENTER,
       drawingModes: [
         google.maps.drawing.OverlayType.MARKER,
-        // google.maps.drawing.OverlayType.CIRCLE,
-        // google.maps.drawing.OverlayType.POLYGON,
         google.maps.drawing.OverlayType.POLYLINE,
-        // google.maps.drawing.OverlayType.RECTANGLE
       ]
     },
     markerOptions: {
       // draggable: true
     },
-    // circleOptions: {
-    //   fillColor: '#000000',
-    //   fillOpacity: 0.5,
-    //   strokeWeight: 2,
-    //   clickable: false,
-    //   editable: true,
-    //   zIndex: 1
-    // },
     polylineOptions: {
       fillColor: '#000000',
       fillOpacity: 0.5,
@@ -148,26 +138,70 @@ function initMap() {
   drawingManager.setMap(map);
 }
 
-function overlayToPrimitive(overlay) {
-  // var path;
+function findSWCorner(overlays) {
+  let corner = {lat: Infinity, lng: Infinity};
+
+  function checkCornerSW(ll) {
+    corner.lng = ll.lng() < corner.lng ? ll.lng() : corner.lng;
+    corner.lat = ll.lat() < corner.lat ? ll.lat() : corner.lat;
+  }
+
+  overlays.forEach(function (overlay) {
+    switch (overlay.overlayType) {
+      case 'marker':
+        let position = overlay.getPosition();
+        checkCornerSW(position);
+        break;
+      case 'polyline':
+        let positions = overlay.getPath().getArray();
+        positions.forEach(checkCornerSW);
+        break;
+      default:
+        break;
+    }
+  });
+  return corner;
+}
+
+function overlayToPrimitive(overlay, cornerSW) {
   switch (overlay.overlayType) {
     case 'marker':
-    return {
-      primitive: "point",
-      point: latlngToPoint(overlay.getPosition()),
-    };
-    break;
+      let position = overlay.getPosition();
+      return {
+        primitive: "point",
+        attributes: {
+          referencePoint: cornerSW,
+          latlng: position,
+        },
+        point: latlngToPoint(position, cornerSW),
+      };
+      break;
     case 'polyline':
-    return {
-      primitive: "polyline",
-      points: overlay.getPath().getArray().map(latlngToPoint),
-    }
-    break;
+      let positions = overlay.getPath().getArray();
+      return {
+        primitive: "polyline",
+        attributes: {
+          referencePoint: cornerSW,
+          latlngs: positions
+        },
+        points: positions.map(function(position) {return latlngToPoint(position, cornerSW);}),
+      }
+      break;
     default:
-    break;
+      break;
   }
 }
 
-function latlngToPoint(ll) {
-  return [ll.lng(), ll.lat(), 0];
+function latlngToPoint(ll, reference) {
+  let lat_delta = (ll.lat() - reference.lat) * Math.PI / 180;
+  let lng_delta = (ll.lng() - reference.lng) * Math.PI / 180;
+  let mean_lat = ((ll.lat() + reference.lat) / 2) * Math.PI / 180;
+  let R = 6371009;
+  
+  // this is an approximation formula for very short distances
+  // it loses accuracy as you get larger or closer to the poles
+  let x = R * Math.cos(mean_lat) * lng_delta;
+  let y = R * lat_delta;
+
+  return [x, y, 0];
 }
